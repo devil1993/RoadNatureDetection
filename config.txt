@@ -1,0 +1,5 @@
+{
+	"ground_truth_file" : "ukhra"
+	,"stop_length": 52
+	,"output_file_prefix": "ukhra_result_"
+}
