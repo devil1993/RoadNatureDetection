@@ -1,6 +1,9 @@
 import sys
+import os
 
-folder = ''
+# print 'Starting NEMO------------------------------------------------------'
+
+folder = './'
 try:
 	folder = sys.argv[5]
 except Exception,e:
@@ -31,7 +34,7 @@ wifis = []
 for gps_string in gps_strings:
 	try:
 		components = gps_string.split(',')
-		gps = gps + [(components[0], components[1],components[4].split(' ')[1])]
+		gps = gps + [(components[0], components[1],components[4].split(' ')[1],components[5])]
 	except Exception,e:
 		print e
 for sound_string in sound_strings:
@@ -52,7 +55,7 @@ for wifi_string in wifi_strings:
 
 #print sounds
 
-print wifis
+# print wifis
 
 j=0
 k=0
@@ -62,6 +65,7 @@ for i in xrange(0,len(gps)):
 	lat = gps[i][0]
 	lng = gps[i][1]
 	time = gps[i][2]
+	info = gps[i][3]
 	# print lat,lng,time
 	sound_data = -1
 	sound_dev = 0
@@ -76,23 +80,40 @@ for i in xrange(0,len(gps)):
 	
 	wifi_data = []
 	while (k<len(wifis) and wifis[k][3][11:]<=time):
-		print wifis[k][3][11:],time
+		# print wifis[k][3][11:],time
 		if (wifis[k][3][11:] == time):
 			wifi_data = wifi_data + [(wifis[k][0],wifis[k][1],int(wifis[k][2]))]
-			print wifi_data
+			# print wifi_data
 		k = k+1
 		
 	
 	#print wifi_data
 	#res = res + [(lat,lng,time,sound_data,wifi_data)]
-	res = res + [(lat,lng,time,sound_data,sound_dev,wifi_data)]
-
+	res = res + [(lat,lng,time,sound_data,sound_dev,wifi_data,info)]
+if not os.path.exists(folder+'tags'):
+    os.makedirs(folder+'tags')
 file = open(folder + sys.argv[4],'w')
 try:
-	for result in res:
+	for result in res:		
 		file.write(result[0]+','+result[1]+','+result[2]+','+str(result[3])+','+str(result[4])+','+str(result[5])+'\n')
+		#print result[6]
+		tags = result[6].split('+')
+		if len(tags)>1:
+			for tag in tags:
+				if tag == '':
+					continue
+				try:
+					tag_folder = tag.split('_')[0].replace(' ','_')					
+					if not os.path.exists(folder+'tags/'+tag_folder):
+						os.makedirs(folder+'tags/'+tag_folder)
+					tag_name = tag.replace(' ','_')
+					# print folder+tag_name+sys.argv[1]
+					splitFile = open(folder+'tags/'+tag_folder+'/'+tag_name+sys.argv[1],'a')
+					splitFile.write(result[0]+','+result[1]+','+result[2]+','+str(result[3])+','+str(result[4])+','+str(result[5])+'\n')
+					splitFile.close()
+				except Exception,e:
+					print e
 		#file.write(result[0]+','+result[1]+','+result[2]+','+'\n')
 except Exception,e:
 	print e
 file.close()
-
