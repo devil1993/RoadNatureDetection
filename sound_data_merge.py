@@ -4,8 +4,8 @@ import numpy as np
 folder=''
 try:
 	folder = sys.argv[2]
-except Exception,e:
-	print e
+except Exception as e:
+	print(e)
 file = open(folder+sys.argv[1],'r')
 lines = file.read().split('\n')
 file.close()
@@ -29,6 +29,6 @@ try:
 			#print next_data
 		op_file.write(data[0][11:-4]+','+str(_sum)+',0'+'\n')
 		i = i+count
-except Exception,e:
-	print e
+except Exception as e:
+	print(e)
 op_file.close()

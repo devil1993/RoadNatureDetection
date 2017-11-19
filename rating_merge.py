@@ -22,7 +22,7 @@ for i in range(len(rating_data)):
 #for data in rating_data:
 #		print data
 
-print len(rating_data)
+print(len(rating_data))
 
 list_files=check_output('ls '+busy_folder,shell=True).split('\n')
 for files in list_files:
@@ -38,7 +38,7 @@ for files in list_files:
 		open_file.close()
 		for data in rating_data:
 			if int(data['time'])>=time_:
-				print data['time'],time_
+				print(data['time'],time)
 				command = 'mv '+busy_folder+files+' '+busy_folder+str(data['rate'])+'/'
 				#print command
 				os.system(command)

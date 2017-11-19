@@ -47,8 +47,8 @@ def computeStats(stop,start,stop_no,stop_distances_list):
 			#Add up to the varience
 			speedset = speedset + [dspeed]
 			varience = varience + math.pow(mean - dspeed ,2)
-		except Exception,e:
-			print e
+		except Exception as e:
+			print(e)
 	#Actual varience is [Sum of squred differences/The number of samples] and the Standard Deviation is the root of the varience
 	sd = math.sqrt(varience/time_diff)
 	npspeedset = np.array(speedset)
@@ -70,8 +70,8 @@ def initialize_single():
 
 	try:
 		output_file = sys.argv[2]
-	except Exception, e:
-		print "Taking output file name from config file..."
+	except Exception as e:
+		print("Taking output file name from config file...")
 
 def initialize_multi(source_directory):
 	'''
@@ -89,8 +89,8 @@ def initialize_multi(source_directory):
 
 	try:
 		output_file = sys.argv[2]
-	except Exception, e:
-		print "Taking output file name from config file..."
+	except Exception as e:
+		print("Taking output file name from config file...")
 def find_nearest_stop(x,y,j,groundTruthPointSet):
 	#global  groundTruthPointSet
 	new_nearest_stop = 0
@@ -121,25 +121,26 @@ def getInfo(input_file):
 	pointSet = []
 	#Extract the point and timestamp from the lines
 	for line in lines:
-	        components = line.split(',')
-	        try:
-	                point_x = float(components[0])
-	                point_y = float(components[1])
-	                #split time into hours, minutes and seconds
-	                timeunits = components[2].split(':')
-	                #convert the time into seconds
-	                point_t = ((int(timeunits[0])*60) + int(timeunits[1])) * 60 + int(timeunits[2])
-	                #pointSet.insert(len(pointSet), (point_x,point_y,point_t))
-	                point_sm = float(components[3])
-	                point_ssd = float(components[4])
-	                list_start = line.index('[')
-	                wifis = ast.literal_eval(line[list_start:])
-	                pointSet += [(point_x,point_y,point_t,point_sm,point_ssd,wifis)]
-	        except Exception, e:
-				print e
+			components = line.split(',')
+			try:
+				point_x = float(components[0])
+				point_y = float(components[1])
+				#split time into hours, minutes and seconds
+				timeunits = components[2].split(':')
+				#convert the time into seconds
+				point_t = ((int(timeunits[0])*60) + int(timeunits[1])) * 60 + int(timeunits[2])
+				#pointSet.insert(len(pointSet), (point_x,point_y,point_t))
+				point_sm = float(components[3])
+				point_ssd = float(components[4])
+				point_alt = float(components[5])
+				list_start = line.index('[')
+				wifis = ast.literal_eval(line[list_start:])
+				pointSet += [(point_x,point_y,point_t,point_sm,point_ssd,wifis,point_alt)]
+			except Exception as e:
+				print(e)
 
 	#Read the ground truth file	
-	print ground_truth_file		
+	print(ground_truth_file)		
 	file = open(ground_truth_file,"r")
 	lines = file.read().split('\n')
 	file.close()
@@ -155,7 +156,7 @@ def getInfo(input_file):
 	                #point_t = ((int(timeunits[0])*60) + int(timeunits[1])) * 60 + int(timeunits[2])
 	                #pointSet.insert(len(pointSet), (point_x,point_y,point_t))
 	                groundTruthPointSet += [(point_x,point_y)]
-	        except Exception, e:
+	        except Exception as e:
 	                #print e
 	                pass
 	#print groundTruthPointSet, len(groundTruthPointSet)
@@ -165,6 +166,7 @@ def getInfo(input_file):
 	routeLength = 0.0
 	stop_distances = [0.0]*(totalStops)
 	path_details = [(0.0,0.0)]*(totalStops)
+	alt_devs = [0.0]*(totalStops)
 	stop_times = [0] * totalStops
 	wait_times = [0] * totalStops
 	reaching_time = [0] * totalStops
@@ -193,10 +195,11 @@ def getInfo(input_file):
 	#currentStop = nearest_stop
 	nearest_stop=find_nearest_stop(lastPoint[0],lastPoint[1],0,groundTruthPointSet)
 	currentStop = nearest_stop
-	print "Current Stop:-",currentStop
+	print("Current Stop:-",currentStop)
 	# Check if the vehicle is at an moving state with respect to the first stop
 	movingFlag = get_spherical_distance(lastPoint[0],groundTruthPointSet[currentStop][0],lastPoint[1],groundTruthPointSet[currentStop][1]) > stop_radius
 	speed_sign = []
+	alts = []
 	last_time = starting_time
 	# Now we traverse through the points set
 	for point in pointSet:
@@ -209,7 +212,7 @@ def getInfo(input_file):
 			currentStop=nearest_stop
 			lastPoint=point
 			# currentStop+=1
-			print currentStop,lastPoint
+			print(currentStop,lastPoint)
 			# continue
 		elif(point[2]-lastPoint[2]<1):
 			continue
@@ -261,7 +264,7 @@ def getInfo(input_file):
 					mean_speed = np.mean(sign[:,0])
 					sd_speed = np.std(sign[:,0])
 				except Exception as e:
-					print e
+					print(e)
 				
 				#'''
 				cum_distance = 0.0
@@ -278,13 +281,16 @@ def getInfo(input_file):
 				try:
 					slow_points = [x for x in speed_sign if x[0]<threshold_speed]
 					slow_speed_fraction[currentStop] = float(len(slow_points))/len(speed_sign)					
-				except Exception,e:
-					print e
+				except Exception as e:
+					print(e)
 				try:
 					sound_feature[currentStop] = sound_data/cum_distance
 				except Exception as e:
-					print e
+					print(e)
+				cur_alt_dev = np.std(alts)
 				speed_sign = []
+				alts = []
+				alt_devs[currentStop] = cur_alt_dev
 				#path_details[currentStop] = computeStats(i,j,currentStop,stop_distances)
 				path_details[currentStop] = (mean_speed,sd_speed)
 			# Set the flag as false as it has entered a stop area
@@ -302,6 +308,7 @@ def getInfo(input_file):
 			if movingFlag:
 				stop_distances[currentStop] = stop_distances[currentStop] + d
 				speed_sign = speed_sign + [(d,stop_distances[currentStop],point[3],point[4])]
+				alts = alts + [point[6]]
 				for wifi in point[5]:
 					if wifi[1] not in wifi_found:
 						wifi_found.append(wifi[1])
@@ -324,8 +331,10 @@ def getInfo(input_file):
 	#print i, len(pointSet), movingFlag
 	# Write data to output file
 	file = open(output_file + input_file + '_' + str(starting_time)+'.csv',"w")
-	file.write('#location_lat,location_long,reaching_time,stop_time,wait_time,distance_from_last_stop,mean_speed_in_m/s,standard_deviation of speed,stop number,slow speed fraction,sound feature,wifi density'.replace(' ','_')+ '\n')
-	for x in xrange(0,totalStops):		
+	file.write('#location_lat,location_long,reaching_time,stop_time,wait_time,distance_from_last_stop,mean_speed_in_m/s,standard_deviation of speed,stop number,slow speed fraction,sound feature,wifi density'.replace(' ','_')+ ',alt_devs' + '\n')
+	for x in range(0,totalStops):
+		if(path_details[x][0]<=0):
+			continue
 		line = str(groundTruthPointSet[x][0]);
 		line = line + ',' + str(groundTruthPointSet[x][1])
 		#line = line + ',' + '\'' + str(reaching_time[x]/3600) + ':' + str((reaching_time[x]%3600)/60) + ':' + str((reaching_time[x]%3600)%60)+ '\'' 
@@ -342,7 +351,8 @@ def getInfo(input_file):
 			line = line + ',' + str(len(wifi_list[wifi_index.index(x)])/stop_distances[x])
 		else:
 			line = line + ',0'
-		line = line + ',' + file_identifier + '\n'
+		line = line + ',' + file_identifier 
+		line = line + ',' + str(alt_devs[x]) + '\n'
 		# line = line + '\n'
 		file.write(line)
 	file.close()

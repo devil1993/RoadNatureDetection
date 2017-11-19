@@ -6,8 +6,8 @@ import os
 folder = './'
 try:
 	folder = sys.argv[5]
-except Exception,e:
-	print e
+except Exception as e:
+	print(e)
 
 gps_file_name  = folder + sys.argv[1]
 sound_file_name  = folder + sys.argv[2]
@@ -34,22 +34,22 @@ wifis = []
 for gps_string in gps_strings:
 	try:
 		components = gps_string.split(',')
-		gps = gps + [(components[0], components[1],components[4].split(' ')[1],components[5])]
-	except Exception,e:
-		print e
+		gps = gps + [(components[0], components[1],components[4].split(' ')[1],components[5],components[3])]
+	except Exception as e:
+		print(e)
 for sound_string in sound_strings:
 	try:
 		components = sound_string.split(',')
 		sounds = sounds + [(components[0], components[1],components[2])]
-	except Exception,e:
-		print e
+	except Exception as e:
+		print(e)
 
 for wifi_string in wifi_strings:
 	try:
 		components = wifi_string.split(',')
 		wifis = wifis + [(components[0], components[1], components[2], components[3])]
-	except Exception,e:
-		print e
+	except Exception as e:
+		print(e)
 
 #sizes = max([len(gps),len(gps),len(gps)])
 
@@ -61,11 +61,13 @@ j=0
 k=0
 res = []
 
-for i in xrange(0,len(gps)):
+for i in range(0,len(gps)):
+	# print(gps[i])
 	lat = gps[i][0]
 	lng = gps[i][1]
 	time = gps[i][2]
 	info = gps[i][3]
+	alt = gps[i][4]
 	# print lat,lng,time
 	sound_data = -1
 	sound_dev = 0
@@ -89,13 +91,13 @@ for i in xrange(0,len(gps)):
 	
 	#print wifi_data
 	#res = res + [(lat,lng,time,sound_data,wifi_data)]
-	res = res + [(lat,lng,time,sound_data,sound_dev,wifi_data,info)]
+	res = res + [(lat,lng,time,sound_data,sound_dev,wifi_data,info,alt)]
 if not os.path.exists(folder+'tags'):
     os.makedirs(folder+'tags')
 file = open(folder + sys.argv[4],'w')
 try:
 	for result in res:		
-		file.write(result[0]+','+result[1]+','+result[2]+','+str(result[3])+','+str(result[4])+','+str(result[5])+'\n')
+		file.write(result[0]+','+result[1]+','+result[2]+','+str(result[3])+','+str(result[4])+','+str(result[7])+','+str(result[5])+'\n')
 		#print result[6]
 		tags = result[6].split('+')
 		if len(tags)>1:
@@ -109,11 +111,11 @@ try:
 					tag_name = tag.replace(' ','_')
 					# print folder+tag_name+sys.argv[1]
 					splitFile = open(folder+'tags/'+tag_folder+'/'+tag_name+sys.argv[1],'a')
-					splitFile.write(result[0]+','+result[1]+','+result[2]+','+str(result[3])+','+str(result[4])+','+str(result[5])+'\n')
+					splitFile.write(result[0]+','+result[1]+','+result[2]+','+str(result[3])+','+str(result[4])+','+str(result[7])+','+str(result[5])+'\n')
 					splitFile.close()
-				except Exception,e:
-					print e
+				except Exception as e:
+					print(e)
 		#file.write(result[0]+','+result[1]+','+result[2]+','+'\n')
-except Exception,e:
-	print e
+except Exception as e:
+	print(e)
 file.close()

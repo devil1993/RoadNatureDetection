@@ -14,7 +14,7 @@ for file in files:
 	pid = os.fork()
 	if pid == 0:
 		getInfo(file)
-		print file,"done"
+		print(file,"done")
 		os._exit(0)
 	else:
-		print pid,"working on file",file
+		print(pid,"working on file",file)
