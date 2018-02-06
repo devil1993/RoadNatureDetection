@@ -4,6 +4,33 @@ from subprocess import check_output
 from settings import *
 from shutil import copyfile
 
+if '-help' in sys.argv:
+	print('-f','Folder path')
+	print('-o','Output folder path')
+	print('-s','Stops file')
+	print('-p','Output file prefix')
+	print('-help','HELP')
+	quit()
+
+if '-f' in sys.argv:
+	index = sys.argv.index('-f') + 1
+	folders = [sys.argv[index]]
+	folder = folders[0]
+
+if '-o' in sys.argv:
+	index = sys.argv.index('-o') + 1
+	out_folder = [sys.argv[index]]
+
+if '-s' in sys.argv:
+	index = sys.argv.index('-s') + 1
+	config['ground_truth_file'] = [sys.argv[index]]
+	stopfiile = [sys.argv[index]]
+
+if '-p' in sys.argv:
+	index = sys.argv.index('-p') + 1
+	config['output_file_prefix'] = [sys.argv[index]]
+
+'''
 for folder in folders:
 	try:
 		if not folder.endswith('/'):
@@ -27,5 +54,8 @@ for folder in folders:
 		os.system('python rating_merge.py '+ folder+'tags/Busy_Road/ '+folder+'Bus_Rating.txt')
 	except Exception as e:
 		print(e)
-os.system('python launcher.py '+out_folder)
+
+'''
+
+os.system('python launcher.py -i '+folder+' -o '+out_folder + ' -s '+ stopfiile)
 print("===============================================DONE========================================================================")

@@ -12,6 +12,7 @@ output_file = ' '
 ground_truth_file =  ' '
 pointSet = []
 input_dir = './'
+
 def get_spherical_distance(lat1,lat2,long1,long2):
         """
         Get spherical distance any two points given their co-ordinates (latitude, longitude)
@@ -73,24 +74,29 @@ def initialize_single():
 	except Exception as e:
 		print("Taking output file name from config file...")
 
-def initialize_multi(source_directory):
+def initialize_multi(source_directory,stopfile = config["ground_truth_file"]
+	,out_dir = None):
 	'''
 	This function initializes the configurations for getting info from single input file
 	'''
 	global stop_radius,ground_truth_file,input_file,output_file,input_dir
+	if out_dir == None:
+		output_file = source_directory + '/results/'
+	else:
+		output_file = out_dir
 	#with open('config.txt','r') as inf:
 	#    config = eval(inf.read())
 
 	stop_radius = int(config["stop_length"])/2
-	ground_truth_file = config["ground_truth_file"]
-	output_file = source_directory + '/results/' + config["output_file_prefix"]
-	input_dir = source_directory+'/'
+	ground_truth_file = stopfile
+	
+	input_dir = source_directory
 	#input_file = sys.argv[1]
 
-	try:
-		output_file = sys.argv[2]
-	except Exception as e:
-		print("Taking output file name from config file...")
+	# try:
+	# 	output_file = sys.argv[2]
+	# except Exception as e:
+	# 	print("Taking output file name from config file...")
 def find_nearest_stop(x,y,j,groundTruthPointSet):
 	#global  groundTruthPointSet
 	new_nearest_stop = 0
@@ -112,9 +118,11 @@ def getInfo(input_file):
 	file.close()
 
 	
-	ip_file_identifiers = input_file.split('_')
-	file_identifier = ip_file_identifiers[-7]+ip_file_identifiers[-6]+ip_file_identifiers[-5]
+	# ip_file_identifiers = input_file.split('_')
+	# file_identifier = ip_file_identifiers[-7]+ip_file_identifiers[-6]+ip_file_identifiers[-5]
 	
+	file_identifier = input_file.split('.')[0]
+
 	# print file_identifier
 	# sys.exit(1)
 
@@ -130,12 +138,12 @@ def getInfo(input_file):
 				#convert the time into seconds
 				point_t = ((int(timeunits[0])*60) + int(timeunits[1])) * 60 + int(timeunits[2])
 				#pointSet.insert(len(pointSet), (point_x,point_y,point_t))
-				point_sm = float(components[3])
-				point_ssd = float(components[4])
+				point_rating = float(components[3])
+				point_speed = float(components[4])
 				point_alt = float(components[5])
 				list_start = line.index('[')
 				wifis = ast.literal_eval(line[list_start:])
-				pointSet += [(point_x,point_y,point_t,point_sm,point_ssd,wifis,point_alt)]
+				pointSet += [(point_x,point_y,point_t,point_rating,point_speed,wifis,point_alt)]
 			except Exception as e:
 				print(e)
 
@@ -171,7 +179,7 @@ def getInfo(input_file):
 	wait_times = [0] * totalStops
 	reaching_time = [0] * totalStops
 	slow_speed_fraction = [-1.0] * totalStops
-	sound_feature =[0.0]*totalStops
+	# sound_feature =[0.0]*totalStops
 	wifi_list = []
 	wifi_found = []
 	wifi_index = []
@@ -216,9 +224,6 @@ def getInfo(input_file):
 			# continue
 		elif(point[2]-lastPoint[2]<1):
 			continue
-
-
-
 		if currentStop == nearest_stop:
 			currentStop = find_nearest_stop(point[0],point[1],0,groundTruthPointSet)
 			'''for i in range(0,len(groundTruthPointSet)):
@@ -248,45 +253,45 @@ def getInfo(input_file):
 					starting_time = pointSet[i][2]
 				reaching_time[currentStop] = point[2]
 				#print 'came to ',currentStop, groundTruthPointSet[currentStop],len(speed_sign)
-				if not os.path.exists(input_dir+'results/subRoute'+str(currentStop)):
-    					os.makedirs(input_dir+'results/subRoute'+str(currentStop))
-				filedetails = open(input_dir+'results/subRoute'+str(currentStop)+'/'+input_file,'w')
+				if not os.path.exists(output_file + 'subRoute'+str(currentStop)):
+    					os.makedirs(output_file + 'subRoute'+str(currentStop))
+				filedetails = open(output_file + 'subRoute'+str(currentStop)+'/'+input_file,'w')
 				
 				mean_sound = 0
 				sd_sound = 0
 				mean_speed = 0
 				sd_speed = 0
 
-				try:
-					sign = np.array(speed_sign)
-					mean_sound = np.mean(sign[:,2])
-					sd_sound = np.std(sign[:,2])
-					mean_speed = np.mean(sign[:,0])
-					sd_speed = np.std(sign[:,0])
-				except Exception as e:
-					print(e)
+				# try:
+				# 	sign = np.array(speed_sign)
+				# 	mean_sound = np.mean(sign[:,2])
+				# 	sd_sound = np.std(sign[:,2])
+				# 	mean_speed = np.mean(sign[:,0])
+				# 	sd_speed = np.std(sign[:,0])
+				# except Exception as e:
+				# 	print(e)
 				
 				#'''
 				cum_distance = 0.0
 				sound_data = 0.0
 				for x in speed_sign:
-					normal_sound = (x[2]-mean_sound)/sd_sound
-					if x[2] > sound_threshold:
-						sound_data = sound_data +(x[2] - sound_threshold)*(x[0]+1)
-					if x[2] > 0:
-						cum_distance = cum_distance + x[0]
+					# normal_sound = (x[2]-mean_sound)/sd_sound
+					# if x[2] > sound_threshold:
+					# 	sound_data = sound_data +(x[2] - sound_threshold)*(x[0]+1)
+					# if x[2] > 0:
+					# 	cum_distance = cum_distance + x[0]
 					# distance instant_speed instant_max_sound instant_sd_sound instant_normalized_max_sound				
-					filedetails.write(str(x[1])+'\t'+str(x[0])+'\t'+str(x[2])+'\t'+str(x[3])+'\t'+str(normal_sound)+'\n')
+					filedetails.write(str(x[1])+'\t'+str(x[0])+'\t'+str(x[2])+'\t'+str(x[3])+'\n')
 				filedetails.close()
 				try:
 					slow_points = [x for x in speed_sign if x[0]<threshold_speed]
 					slow_speed_fraction[currentStop] = float(len(slow_points))/len(speed_sign)					
 				except Exception as e:
 					print(e)
-				try:
-					sound_feature[currentStop] = sound_data/cum_distance
-				except Exception as e:
-					print(e)
+				# try:
+				# 	sound_feature[currentStop] = sound_data/cum_distance
+				# except Exception as e:
+				# 	print(e)
 				cur_alt_dev = np.std(alts)
 				speed_sign = []
 				alts = []
@@ -346,7 +351,7 @@ def getInfo(input_file):
 		line = line + ',' + str(path_details[x][1])
 		line = line + ',' + str(x)
 		line = line + ',' + str(slow_speed_fraction[x])
-		line = line + ',' + str(sound_feature[x])
+		# line = line + ',' + str(sound_feature[x])
 		if x in wifi_index and stop_distances[x]>0:
 			line = line + ',' + str(len(wifi_list[wifi_index.index(x)])/stop_distances[x])
 		else:
